@@ -1,4 +1,3 @@
-
 $PythonPath="C:\Python36\"
 $certbot_path = "Lib\site-packages\certbot\"
 $mainpy="main.py"
@@ -7,7 +6,7 @@ $cert_manager="cert_manager.py"
 $account="account.py"
 $util="util.py"
 $storage="storage.py"
-#log=log.py
+$log="log.py"
 
 
 function downloPythonInstallerPIPCert{
@@ -96,19 +95,21 @@ $path = $virtualenv + $certbot_path + $cert_manager
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
 $path = $virtualenv + $certbot_path + $account
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
-#log.py doesn't seem to exist anymore (14/05/2017). Left in cse it needs to be run
-#$path = $virtualenv + $certbot_path + $log
-#(Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
+$path = $virtualenv + $certbot_path + $log
+(Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
 
 
 #new fixes (14/05/2017) Expand function wasn't working. New codebase has a tuple error
 #https://github.com/certbot/certbot/issues/4510
-#
+#https://github.com/certbot/certbot/issues/4659
 
 $path = $virtualenv + $certbot_path + $util
-(Get-Content $path).replace('configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE.add(ShowWarning)', "#configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE.add(ShowWarning)") | Set-Content $path
+(Get-Content $path).replace('configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE.add(ShowWarning)', "configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE += (ShowWarning,)") | Set-Content $path
 
 $path = $virtualenv + $certbot_path + $storage
+(Get-Content $path).replace('os.rename', "os.replace") | Set-Content $path
+
+$path = $virtualenv + $certbot_path + $log
 (Get-Content $path).replace('os.rename', "os.replace") | Set-Content $path
 
 Write-Host "Modified Certbot to Work with Windows in: $virtualenv" 
