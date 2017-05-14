@@ -1,10 +1,13 @@
-﻿$PythonPath="C:\Python36\"
+
+$PythonPath="C:\Python36\"
 $certbot_path = "Lib\site-packages\certbot\"
 $mainpy="main.py"
 $crypto_util="crypto_util.py"
 $cert_manager="cert_manager.py"
 $account="account.py"
-$log="log.py"
+$util="util.py"
+$storage="storage.py"
+#log=log.py
 
 
 function downloPythonInstallerPIPCert{
@@ -57,21 +60,23 @@ pip freeze
 
 }
 
-function createVirtualCertbotEnvs($virtualenv){
+function createVirtualCertbotEnvs($virtualenv,$version){
 
 Start-Process virtualenv -ArgumentList $virtualenv  -Wait
 Write-Host "Created Virtual Environment: "
 }
 
-function installCertbotInVENVS($virtualenv){
+function installCertbotInVENVS($virtualenv,$version){
 
+Write-Host($virtualenv)
+$certbot_cmd = "install certbot=="+$version
+Write-Host($certbot_cmd)
 
-$certbot_cmd = "install certbot"
-
-$cmd = "$virtualenv\Scripts\activate.ps1"
+$cmd = $virtualenv+"\Scripts\activate.ps1"
+Write-Host($cmd)
 Invoke-Expression $cmd
 Start-Process pip -ArgumentList $certbot_cmd  -Wait
-Write-Host "Insatlled Certbot In Virtual Environment: "
+Write-Host "Insatlled Certbot $version In Virtual Environment: $virtualenv" 
 
 }
 
@@ -91,9 +96,22 @@ $path = $virtualenv + $certbot_path + $cert_manager
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
 $path = $virtualenv + $certbot_path + $account
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
-$path = $virtualenv + $certbot_path + $log
-(Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
-Write-Host "Modified Certbot to Work with Windows in: "
+#log.py doesn't seem to exist anymore (14/05/2017). Left in cse it needs to be run
+#$path = $virtualenv + $certbot_path + $log
+#(Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
+
+
+#new fixes (14/05/2017) Expand function wasn't working. New codebase has a tuple error
+#https://github.com/certbot/certbot/issues/4510
+#
+
+$path = $virtualenv + $certbot_path + $util
+(Get-Content $path).replace('configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE.add(ShowWarning)', "#configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE.add(ShowWarning)") | Set-Content $path
+
+$path = $virtualenv + $certbot_path + $storage
+(Get-Content $path).replace('os.rename', "os.replace") | Set-Content $path
+
+Write-Host "Modified Certbot to Work with Windows in: $virtualenv" 
 
 }
 
@@ -105,9 +123,9 @@ createVirtualCertbotEnvs("$env:SystemDrive\Certbot-Production\")
 createVirtualCertbotEnvs("$env:SystemDrive\Certbot-Staging\")
 createVirtualCertbotEnvs("$env:SystemDrive\Certbot-Test\")
 
-installCertbotInVENVS("$env:SystemDrive\Certbot-Production\")
-installCertbotInVENVS("$env:SystemDrive\Certbot-Staging\")
-installCertbotInVENVS("$env:SystemDrive\Certbot-Test\")
+installCertbotInVENVS "$env:SystemDrive\Certbot-Production\" "0.13.0"
+installCertbotInVENVS "$env:SystemDrive\Certbot-Staging\" "0.13.0"
+installCertbotInVENVS "$env:SystemDrive\Certbot-Test\" "0.13.0"
 
 fixCertbotFiles("$env:SystemDrive\Certbot-Production\")
 fixCertbotFiles("$env:SystemDrive\Certbot-Staging\")
