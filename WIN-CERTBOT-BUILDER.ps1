@@ -7,6 +7,7 @@ $account="account.py"
 $util="util.py"
 $storage="storage.py"
 $log="log.py"
+$client="client.py"
 
 
 function downloPythonInstallerPIPCert{
@@ -96,6 +97,8 @@ $path = $virtualenv + $certbot_path + $cert_manager
 $path = $virtualenv + $certbot_path + $account
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
 $path = $virtualenv + $certbot_path + $log
+(Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
+$path = $virtualenv + $certbot_path + $client
 (Get-Content $path).replace('os.geteuid()', "'0'") | Set-Content $path
 
 
